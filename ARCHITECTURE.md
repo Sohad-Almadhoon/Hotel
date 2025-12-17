@@ -1,4 +1,4 @@
-# System Architecture & Flow Diagrams
+# System Architecture & Flow Diagrams (NestJS)
 
 ## 📐 System Architecture
 
@@ -12,60 +12,80 @@
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
 │                     API GATEWAY LAYER                            │
-│                      (Express Server)                            │
+│                      (NestJS Server)                             │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   CORS       │  │  Body Parser │  │    Logger    │         │
+│  │   CORS       │  │  Validation  │  │    Logger    │         │
+│  │  (Global)    │  │   Pipe       │  │ (Interceptor)│         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
-│                    MIDDLEWARE LAYER                              │
+│                    GUARDS LAYER                                  │
+│                  (Authentication & Authorization)                │
 │                                                                  │
 │  ┌──────────────────┐  ┌──────────────────┐                   │
-│  │  Authentication  │  │   Authorization  │                   │
+│  │  JwtAuthGuard    │  │   RolesGuard     │                   │
 │  │  (JWT Verify)    │  │  (Role Check)    │                   │
-│  └──────────────────┘  └──────────────────┘                   │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐                   │
-│  │   Validation     │  │  Error Handler   │                   │
-│  │ (Input Check)    │  │  (Error Format)  │                   │
 │  └──────────────────┘  └──────────────────┘                   │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
-│                      ROUTING LAYER                               │
+│                      MODULE LAYER                                │
+│                  (Dependency Injection Container)                │
 │                                                                  │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
 │  │   Auth   │  │  Rooms   │  │ Bookings │  │  Admin   │      │
-│  │  Routes  │  │  Routes  │  │  Routes  │  │  Routes  │      │
+│  │  Module  │  │  Module  │  │  Module  │  │  Module  │      │
 │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘      │
+│       │             │             │             │              │
+│    ┌──▼──────────────▼─────────────▼─────────────▼────┐       │
+│    │          Prisma Module (Global)                   │       │
+│    └──────────────────────────────────────────────────┘       │
 └───────┼─────────────┼─────────────┼─────────────┼──────────────┘
         │             │             │             │
 ┌───────▼─────────────▼─────────────▼─────────────▼──────────────┐
 │                   CONTROLLER LAYER                               │
-│               (Business Logic Processing)                        │
+│          (Route Handlers with Decorators)                        │
 │                                                                  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
-│  │    Auth     │  │    Room     │  │   Booking   │            │
+│  │    Auth     │  │    Rooms    │  │   Bookings  │            │
 │  │ Controller  │  │ Controller  │  │ Controller  │            │
+│  │ @ApiTags    │  │ @ApiTags    │  │ @ApiTags    │            │
 │  └─────────────┘  └─────────────┘  └─────────────┘            │
 │                   ┌─────────────┐                               │
 │                   │    Admin    │                               │
 │                   │ Controller  │                               │
+│                   │ @ApiTags    │                               │
+│                   └─────────────┘                               │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────────┐
+│                     SERVICE LAYER                                │
+│                (Business Logic with DI)                          │
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │    Auth     │  │    Rooms    │  │   Bookings  │            │
+│  │  Service    │  │  Service    │  │   Service   │            │
+│  │ @Injectable │  │ @Injectable │  │ @Injectable │            │
+│  └─────────────┘  └─────────────┘  └─────────────┘            │
+│                   ┌─────────────┐                               │
+│                   │    Admin    │                               │
+│                   │  Service    │                               │
+│                   │ @Injectable │                               │
 │                   └─────────────┘                               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────────┐
 │                    DATA ACCESS LAYER                             │
-│                     (Prisma ORM)                                 │
+│                     (Prisma Service)                             │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Prisma Client                                │  │
-│  │  - Query Builder                                          │  │
-│  │  - Type Safety                                            │  │
-│  │  - Relations                                              │  │
-│  │  - Migrations                                             │  │
+│  │              PrismaService                                │  │
+│  │  - Extends PrismaClient                                   │  │
+│  │  - OnModuleInit / OnModuleDestroy hooks                   │  │
+│  │  - Type Safety & Relations                                │  │
+│  │  - Injected into all modules via @Global()                │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └────────────────────────────┬────────────────────────────────────┘
                              │
@@ -80,6 +100,31 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## 🏗️ Module Structure
+
+```
+AppModule (Root)
+├── ConfigModule (Global)
+├── PrismaModule (Global)
+│   └── PrismaService
+├── AuthModule
+│   ├── AuthController
+│   ├── AuthService
+│   ├── JwtStrategy (Passport)
+│   ├── JwtAuthGuard
+│   ├── RolesGuard
+│   └── Decorators (@Roles, @CurrentUser)
+├── RoomsModule
+│   ├── RoomsController
+│   └── RoomsService
+├── BookingsModule
+│   ├── BookingsController
+│   └── BookingsService
+└── AdminModule
+    ├── AdminController
+    └── AdminService
+```
+
 ## 🔄 Authentication Flow
 
 ```
@@ -91,6 +136,7 @@
      │  {email, password, name, role}                          │
      ├─────────────────────────────────────────────────────────►
      │                                                          │
+     │                              ValidationPipe validates DTO│
      │                              Hash password (bcrypt)      │
      │                              Create user in DB           │
      │                              Generate JWT token          │

@@ -1,4 +1,4 @@
-# Quick Reference Card - Room Booking API
+# Quick Reference Card - Room Booking API (NestJS)
 
 ## 🚀 Quick Start Commands
 
@@ -10,8 +10,15 @@ npx prisma migrate dev --name init
 npx prisma generate
 
 # Run Server
-npm run dev              # Development (auto-reload)
-npm start                # Production
+npm run start:dev        # Development (watch mode)
+npm run start:prod       # Production
+npm run start:debug      # Debug mode
+npm run build            # Build TypeScript
+
+# NestJS CLI
+nest generate module <name>      # Generate module
+nest generate controller <name>  # Generate controller
+nest generate service <name>     # Generate service
 
 # Database Tools
 npx prisma studio        # Visual database editor
@@ -22,8 +29,8 @@ npx prisma migrate reset # Reset database (⚠️ deletes data)
 
 ```
 Server:          http://localhost:3000
-API Docs:        http://localhost:3000/api-docs
-Health Check:    http://localhost:3000/health
+API Docs:        http://localhost:3000/api
+Health Check:    http://localhost:3000
 Prisma Studio:   http://localhost:5555
 ```
 
@@ -53,11 +60,11 @@ POST /api/auth/login
 POST /api/rooms + Auth
 {"name":"Suite","price":200,"capacity":2,"description":"Nice room"}
 
-# My Rooms
-GET /api/rooms/my-rooms + Auth
+# Get all rooms
+GET /api/rooms
 
 # Update Room
-PUT /api/rooms/{id} + Auth
+PATCH /api/rooms/{id} + Auth
 {"price":250,"status":"UNAVAILABLE"}
 
 # Delete Room
