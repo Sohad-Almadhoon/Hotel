@@ -1,0 +1,86 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  GUEST
+  ADMIN
+}
+
+enum RoomStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(GUEST)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedRooms Room[]    @relation("RoomOwner")
+  bookings   Booking[] @relation("GuestBookings")
+
+  @@map("users")
+}
+
+model Room {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  capacity    Int
+  status      RoomStatus @default(AVAILABLE)
+  ownerId     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  owner    User      @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([ownerId])
+  @@index([price])
+  @@index([capacity])
+  @@index([status])
+  @@map("rooms")
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  checkIn   DateTime
+  checkOut  DateTime
+  status    BookingStatus @default(PENDING)
+  guestId   String
+  roomId    String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  guest User @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
+  room  Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([guestId])
+  @@index([roomId])
+  @@index([status])
+  @@index([checkIn, checkOut])
+  @@map("bookings")
+}
