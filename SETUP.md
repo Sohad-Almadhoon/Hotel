@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-Follow these steps to get the Room Booking Management System up and running:
+Follow these steps to get the Room Booking Management System (NestJS) up and running:
 
 ### 1. Install Dependencies
 
@@ -23,6 +23,7 @@ npm install
 3. Update `.env` file with your database credentials:
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/room_booking?schema=public"
+   JWT_SECRET="your-secret-key-change-in-production"
    ```
 
 #### Option B: Using SQLite (For Development)
@@ -38,6 +39,7 @@ npm install
 2. Update `.env`:
    ```env
    DATABASE_URL="file:./dev.db"
+   JWT_SECRET="your-secret-key-change-in-production"
    ```
 
 ### 3. Run Database Migrations
@@ -64,29 +66,35 @@ Or create test users via the API after starting the server.
 
 #### Development Mode (with auto-reload):
 ```bash
-npm run dev
+npm run start:dev
 ```
 
 #### Production Mode:
 ```bash
-npm start
+npm run build
+npm run start:prod
+```
+
+#### Debug Mode:
+```bash
+npm run start:debug
 ```
 
 ### 6. Verify Installation
 
 1. Open browser: `http://localhost:3000`
-   - You should see: `{"message":"Room Booking Management API","version":"1.0.0",...}`
+   - You should see: `{"message":"Welcome to Room Booking API"}`
 
-2. Check API Documentation: `http://localhost:3000/api-docs`
+2. Check API Documentation: `http://localhost:3000/api`
 
-3. Health Check: `http://localhost:3000/health`
+3. Health Check: `http://localhost:3000/`
 
 ## Testing the API
 
 ### Option 1: Using Swagger UI
 
-1. Navigate to `http://localhost:3000/api-docs`
-2. Click "Authorize" and enter your JWT token
+1. Navigate to `http://localhost:3000/api`
+2. Click "Authorize" and enter your JWT token (format: `Bearer <token>`)
 3. Test endpoints directly
 
 ### Option 2: Using Postman
